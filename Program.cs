@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TaskTracker.Data;
+using TaskTracker.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
@@ -37,6 +38,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
     options.SlidingExpiration = true;
 });
+
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 
 var app = builder.Build();
 
