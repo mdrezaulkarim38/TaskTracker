@@ -42,6 +42,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

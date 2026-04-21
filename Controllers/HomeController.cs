@@ -1,19 +1,19 @@
-using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using TaskTracker.Models;
 
 namespace TaskTracker.Controllers;
 
 public class HomeController : Controller
 {
+    [AllowAnonymous]
     public IActionResult Index()
     {
-        return View();
-    }
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction("Index", "Task");
 
-    public IActionResult Privacy()
-    {
-        return View();
+        return RedirectToAction("Login", "Account");
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

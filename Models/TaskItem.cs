@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace TaskTracker.Models;
 
@@ -12,4 +13,6 @@ public class TaskItem {
     public Priority Priority { get; set; }
     public bool IsCompleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? UserId { get; set; } = string.Empty;
+    public IdentityUser? User { get; set; }
 }

@@ -24,6 +24,13 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
         });
     }
 }

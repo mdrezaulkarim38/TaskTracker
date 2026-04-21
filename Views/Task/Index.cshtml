@@ -1,0 +1,183 @@
+﻿@model TaskTracker.Models.ViewModels.TaskListViewModel
+
+@{
+    ViewData["Title"] = "Task List";
+}
+
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>✓ Task Tracker</h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                + Add New Task
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Tasks</h5>
+                    <h2 class="mb-0">@Model.TotalCount</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Completed</h5>
+                    <h2 class="mb-0">@Model.CompletedCount</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Pending</h5>
+                    <h2 class="mb-0">@Model.PendingCount</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Index" method="get" id="filterForm">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <input type="text" name="search" id="searchInput" class="form-control"
+                               placeholder="Search by title..." value="@Model.SearchTerm" />
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" id="statusFilter" class="form-select">
+                            <option value="">All Tasks</option>
+                            <option value="pending" selected="@(Model.FilterStatus == "pending")">Pending</option>
+                            <option value="completed" selected="@(Model.FilterStatus == "completed")">Completed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="sort" id="sortOrder" class="form-select">
+                            <option value="">Sort by Date (Newest)</option>
+                            <option value="duedate" selected="@(Model.SortOrder == "duedate")">Sort by Due Date</option>
+                            <option value="priority" selected="@(Model.SortOrder == "priority")">Sort by Priority</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary w-100">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alerts for TempData messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Tasks Table -->
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 5%">ID</th>
+                    <th style="width: 30%">Title</th>
+                    <th style="width: 15%">Due Date</th>
+                    <th style="width: 10%">Priority</th>
+                    <th style="width: 15%">Status</th>
+                    <th style="width: 25%">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tasksTableBody">
+                @if (Model.Tasks != null && Model.Tasks.Any())
+                {
+                    @foreach (var task in Model.Tasks)
+                    {
+                        <tr id="task-row-@task.Id">
+                            <td>@task.Id</td>
+                            <td>@task.Title</td>
+                            <td>@(task.DueDate?.ToString("yyyy-MM-dd") ?? "Not set")</td>
+                            <td>
+                                @{
+                                    var priorityClass = task.Priority.ToString() switch
+                                    {
+                                        "High" => "bg-danger",
+                                        "Medium" => "bg-warning",
+                                        "Low" => "bg-info",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @priorityClass">@task.Priority</span>
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input toggle-status" type="checkbox"
+                                           data-id="@task.Id"
+                                    @(task.IsCompleted ? "checked" : "") />
+                                    <label class="form-check-label" id="status-label-@task.Id">
+                                        @(task.IsCompleted ? "Completed" : "Pending")
+                                    </label>
+                                </div>
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-sm btn-warning">Edit</a>
+                                <button class="btn btn-sm btn-danger delete-btn" data-id="@task.Id" data-title="@task.Title">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No tasks found. Click "Add New Task" to create one.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the task: <strong id="deleteTaskTitle"></strong>?</p>
+                <p class="text-danger mb-0">This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/task.js" asp-append-version="true"></script>
+}

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using TaskTracker.Data;
 using TaskTracker.Models;
 
@@ -8,18 +9,32 @@ public class TaskRepository : ITaskRepository
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<TaskRepository> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public TaskRepository(ApplicationDbContext context, ILogger<TaskRepository> logger)
+    public TaskRepository(ApplicationDbContext context, ILogger<TaskRepository> logger, IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    private string GetCurrentUserId()
+    {
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            throw new UnauthorizedAccessException("User not logged in");
+        return userId;
     }
 
     public async Task<IEnumerable<TaskItem>> GetAllAsync()
     {
         try
         {
-            return await _context.Tasks.OrderByDescending(t => t.CreatedAt).ToListAsync();
+            var userId = GetCurrentUserId();
+            return await _context.Tasks
+                .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
         }
         catch (Exception ex)
         {
@@ -27,11 +42,14 @@ public class TaskRepository : ITaskRepository
             throw;
         }
     }
+
     public async Task<TaskItem?> GetByIdAsync(int id)
     {
         try
         {
-            return await _context.Tasks.FindAsync(id);
+            var userId = GetCurrentUserId();
+            return await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
         }
         catch (Exception ex)
         {
@@ -44,6 +62,10 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
+            // Set the UserId before adding
+            task.UserId = GetCurrentUserId();
+            task.CreatedAt = DateTime.UtcNow;
+
             await _context.Tasks.AddAsync(task);
             await _context.SaveChangesAsync();
             _logger.LogInformation("Task added successfully: {TaskTitle} (ID: {TaskId})", task.Title, task.Id);
@@ -59,7 +81,24 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
-            _context.Tasks.Update(task);
+            var userId = GetCurrentUserId();
+            var existingTask = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == task.Id && t.UserId == userId);
+
+            if (existingTask == null)
+            {
+                _logger.LogWarning("Attempted to update non-existent or unauthorized task with ID {TaskId}", task.Id);
+                throw new UnauthorizedAccessException("Task not found or access denied");
+            }
+
+            // Update only the fields that should be changed
+            existingTask.Title = task.Title;
+            existingTask.Description = task.Description;
+            existingTask.DueDate = task.DueDate;
+            existingTask.Priority = task.Priority;
+            existingTask.IsCompleted = task.IsCompleted;
+
+            _context.Tasks.Update(existingTask);
             await _context.SaveChangesAsync();
             _logger.LogInformation("Task updated successfully: {TaskTitle} (ID: {TaskId})", task.Title, task.Id);
         }
@@ -74,7 +113,10 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
-            var task = await GetByIdAsync(id);
+            var userId = GetCurrentUserId();
+            var task = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+
             if (task != null)
             {
                 _context.Tasks.Remove(task);
@@ -83,7 +125,7 @@ public class TaskRepository : ITaskRepository
             }
             else
             {
-                _logger.LogWarning("Attempted to delete non-existent task with ID {TaskId}", id);
+                _logger.LogWarning("Attempted to delete non-existent or unauthorized task with ID {TaskId}", id);
             }
         }
         catch (Exception ex)
@@ -97,7 +139,10 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
-            var task = await GetByIdAsync(id);
+            var userId = GetCurrentUserId();
+            var task = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+
             if (task != null)
             {
                 task.IsCompleted = !task.IsCompleted;
@@ -107,7 +152,7 @@ public class TaskRepository : ITaskRepository
             }
             else
             {
-                _logger.LogWarning("Attempted to toggle status of non-existent task with ID {TaskId}", id);
+                _logger.LogWarning("Attempted to toggle status of non-existent or unauthorized task with ID {TaskId}", id);
             }
         }
         catch (Exception ex)
@@ -121,7 +166,8 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
-            return await _context.Tasks.AnyAsync(t => t.Id == id);
+            var userId = GetCurrentUserId();
+            return await _context.Tasks.AnyAsync(t => t.Id == id && t.UserId == userId);
         }
         catch (Exception ex)
         {
@@ -129,14 +175,18 @@ public class TaskRepository : ITaskRepository
             throw;
         }
     }
+
     public async Task<IEnumerable<TaskItem>> SearchAsync(string term)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(term))
-                return await GetAllAsync();
+            var userId = GetCurrentUserId();
+            var query = _context.Tasks.Where(t => t.UserId == userId);
 
-            return await _context.Tasks
+            if (string.IsNullOrWhiteSpace(term))
+                return await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+
+            return await query
                 .Where(t => t.Title.Contains(term) ||
                             (t.Description != null && t.Description.Contains(term)))
                 .OrderByDescending(t => t.CreatedAt)
@@ -153,7 +203,8 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
-            var query = _context.Tasks.AsQueryable();
+            var userId = GetCurrentUserId();
+            var query = _context.Tasks.Where(t => t.UserId == userId);
 
             if (!string.IsNullOrEmpty(status))
             {
@@ -184,6 +235,4 @@ public class TaskRepository : ITaskRepository
             throw;
         }
     }
-
-    
 }
