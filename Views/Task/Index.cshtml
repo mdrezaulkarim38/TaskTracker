@@ -8,7 +8,7 @@
     <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-md-6">
-            <h2>✓ Task Tracker</h2>
+            <h2>Task Tracker</h2>
         </div>
         <div class="col-md-6 text-end">
             <a asp-action="Create" class="btn btn-primary">
@@ -49,7 +49,6 @@
     <div class="card mb-4">
         <div class="card-body">
             <form asp-action="Index" method="get" id="filterForm">
-                @Html.AntiForgeryToken()
                 <div class="row g-3">
                     <div class="col-md-5">
                         <input type="text" name="search" id="searchInput" class="form-control"
@@ -93,68 +92,11 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
-
-    <!-- Tasks Table -->
-    <div class="table-responsive">
-        <table class="table table-hover table-bordered">
-            <thead class="table-dark">
-                <tr>
-                    <th style="width: 5%">ID</th>
-                    <th style="width: 30%">Title</th>
-                    <th style="width: 15%">Due Date</th>
-                    <th style="width: 10%">Priority</th>
-                    <th style="width: 15%">Status</th>
-                    <th style="width: 25%">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="tasksTableBody">
-                @if (Model.Tasks != null && Model.Tasks.Any())
-                {
-                    @foreach (var task in Model.Tasks)
-                    {
-                        <tr id="task-row-@task.Id">
-                            <td>@task.Id</td>
-                            <td>@task.Title</td>
-                            <td>@(task.DueDate?.ToString("yyyy-MM-dd") ?? "Not set")</td>
-                            <td>
-                                @{
-                                    var priorityClass = task.Priority.ToString() switch
-                                    {
-                                        "High" => "bg-danger",
-                                        "Medium" => "bg-warning",
-                                        "Low" => "bg-info",
-                                        _ => "bg-secondary"
-                                    };
-                                }
-                                <span class="badge @priorityClass">@task.Priority</span>
-                            </td>
-                            <td>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input toggle-status" type="checkbox"
-                                           data-id="@task.Id"
-                                    @(task.IsCompleted ? "checked" : "") />
-                                    <label class="form-check-label" id="status-label-@task.Id">
-                                        @(task.IsCompleted ? "Completed" : "Pending")
-                                    </label>
-                                </div>
-                            </td>
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-sm btn-warning">Edit</a>
-                                <button class="btn btn-sm btn-danger delete-btn" data-id="@task.Id" data-title="@task.Title">Delete</button>
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            No tasks found. Click "Add New Task" to create one.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <form id="antiForgeryForm" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
+    <div id="taskTableContainer">
+        @await Html.PartialAsync("_TaskTablePartial", Model)
     </div>
 </div>
 

@@ -1,20 +1,33 @@
-﻿$(document).ready(function () {
+﻿$(document).ready(function() {
     let taskIdToDelete = null;
-    const token = $('input[name="__RequestVerificationToken"]').val();
+    const token = $('#antiForgeryForm input[name="__RequestVerificationToken"]').val();
 
-    $('#statusFilter, #sortOrder').on('change', function () {
+    $('#statusFilter, #sortOrder').on('change', function() {
         $('#filterForm').submit();
     });
 
     let searchTimeout;
-    $('#searchInput').on('keyup', function () {
+    $('#searchInput').on('keyup', function() {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(function () {
-            $('#filterForm').submit();
-        }, 500);
+
+        const term = $(this).val().trim();
+
+        searchTimeout = setTimeout(function() {
+            $.ajax({
+                url: '/Task/Search',
+                type: 'GET',
+                data: { term: term },
+                success: function(result) {
+                    $('#taskTableContainer').html(result);
+                },
+                error: function() {
+                    alert('Failed to search tasks.');
+                }
+            });
+        }, 300);
     });
 
-    $(document).on('change', '.toggle-status', function () {
+    $(document).on('change', '.toggle-status', function() {
         const checkbox = $(this);
         const taskId = checkbox.data('id');
         const isChecked = checkbox.is(':checked');
@@ -29,7 +42,7 @@
                 id: taskId,
                 __RequestVerificationToken: token
             },
-            success: function (response) {
+            success: function(response) {
                 if (response.success) {
                     const label = $(`#status-label-${taskId}`);
                     label.text(response.isCompleted ? 'Completed' : 'Pending');
@@ -42,17 +55,17 @@
                     alert(response.message || 'Error updating task status');
                 }
             },
-            error: function () {
+            error: function() {
                 checkbox.prop('checked', originalState);
                 alert('Error updating task status.');
             },
-            complete: function () {
+            complete: function() {
                 checkbox.prop('disabled', false);
             }
         });
     });
 
-    $(document).on('click', '.delete-btn', function () {
+    $(document).on('click', '.delete-btn', function() {
         taskIdToDelete = $(this).data('id');
         const taskTitle = $(this).data('title');
 
@@ -60,7 +73,7 @@
         $('#deleteModal').modal('show');
     });
 
-    $('#confirmDelete').on('click', function () {
+    $('#confirmDelete').on('click', function() {
         if (!taskIdToDelete) return;
 
         const button = $(this);
@@ -73,19 +86,28 @@
                 id: taskIdToDelete,
                 __RequestVerificationToken: token
             },
-            success: function () {
-                location.reload();
+            success: function(response) {
+                $('#deleteModal').modal('hide');
+
+                const row = $(`#task-row-${taskIdToDelete}`);
+                if (row.length) {
+                    row.fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                }
+
+                taskIdToDelete = null;
             },
-            error: function () {
+            error: function() {
                 alert('Error deleting task.');
             },
-            complete: function () {
+            complete: function() {
                 button.prop('disabled', false).text('Delete');
             }
         });
     });
 
-    setTimeout(function () {
+    setTimeout(function() {
         $('.alert').fadeOut('slow');
     }, 3000);
 });
