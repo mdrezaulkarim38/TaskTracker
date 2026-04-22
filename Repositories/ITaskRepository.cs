@@ -13,4 +13,5 @@ public interface ITaskRepository
     Task<TaskItem?> GetByIdAsync(int id);
     Task ToggleStatusAsync(int id);
     Task<bool> ExistsAsync(int id);
+    Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(string? search, string? status, string? sortOrder);
 }

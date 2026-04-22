@@ -17,28 +17,15 @@ public class TaskService : ITaskService
 
     public async Task<TaskListViewModel> GetTaskListAsync(string? search, string? status, string? sort)
     {
-        IEnumerable<TaskItem> tasks;
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            tasks = await _taskRepository.SearchAsync(search);
-        }
-        else
-        {
-            tasks = await _taskRepository.FilterAsync(
-                status ?? "all",
-                sort ?? "desc"
-            );
-        }
-
+        var tasks = await _taskRepository.GetFilteredTasksAsync(search, status, sort);
         var allTasks = await _taskRepository.GetAllAsync();
 
         return new TaskListViewModel
         {
             Tasks = tasks,
             SearchTerm = search,
-            FilterStatus = status ?? "all",
-            SortOrder = sort ?? "desc",
+            FilterStatus = status ?? "",
+            SortOrder = sort ?? "",
             TotalCount = allTasks.Count(),
             CompletedCount = allTasks.Count(t => t.IsCompleted),
             PendingCount = allTasks.Count(t => !t.IsCompleted)

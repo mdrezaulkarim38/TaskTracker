@@ -235,4 +235,49 @@ public class TaskRepository : ITaskRepository
             throw;
         }
     }
+
+    public async Task<IEnumerable<TaskItem>> GetFilteredTasksAsync(string? search, string? status, string? sortOrder)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var query = _context.Tasks.Where(t => t.UserId == userId);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(t =>
+                    t.Title.Contains(search) ||
+                    (t.Description != null && t.Description.Contains(search)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (status.ToLower() == "completed")
+                    query = query.Where(t => t.IsCompleted);
+                else if (status.ToLower() == "pending")
+                    query = query.Where(t => !t.IsCompleted);
+            }
+
+            if (sortOrder?.ToLower() == "duedate")
+            {
+                query = query.OrderBy(t => t.DueDate ?? DateTime.MaxValue);
+            }
+            else if (sortOrder?.ToLower() == "priority")
+            {
+                query = query.OrderByDescending(t => t.Priority);
+            }
+            else
+            {
+                query = query.OrderByDescending(t => t.CreatedAt);
+            }
+
+            return await query.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error filtering tasks with search: {Search}, status: {Status}, sortOrder: {SortOrder}",
+                search, status, sortOrder);
+            throw;
+        }
+    }
 }
