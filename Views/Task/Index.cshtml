@@ -4,96 +4,113 @@
     ViewData["Title"] = "Task List";
 }
 
-<div class="container mt-4">
-    <!-- Header Section -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <h2>Task Tracker</h2>
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Task Tracker</h2>
+            <p class="text-muted mb-0">Manage your tasks, track progress, and stay organized.</p>
         </div>
-        <div class="col-md-6 text-end">
-            <a asp-action="Create" class="btn btn-primary">
-                + Add New Task
+
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="Create" class="btn btn-sm btn-primary btn-sm px-3">
+                <i class="fa-solid fa-plus me-1"></i>Add Task
             </a>
+
             <a asp-action="ExportCsv"
                    asp-route-search="@Model.SearchTerm"
                    asp-route-status="@Model.FilterStatus"
                    asp-route-sort="@Model.SortOrder"
-                   class="btn btn-success">
-                ⬇ Export CSV
+                   class="btn btn-success btn-sm px-3">
+                <i class="fa-solid fa-file-csv me-1"></i>Export CSV
             </a>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-primary text-white">
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card border-1 shadow-sm rounded-4 h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Total Tasks</h5>
-                    <h2 class="mb-0">@Model.TotalCount</h2>
+                    <p class="text-muted mb-1">Total Tasks</p>
+                    <h3 class="fw-bold mb-0">@Model.TotalCount</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
+
+        <div class="col-12 col-md-4">
+            <div class="card border-1 shadow-sm rounded-4 h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Completed</h5>
-                    <h2 class="mb-0">@Model.CompletedCount</h2>
+                    <p class="text-muted mb-1">Pending</p>
+                    <h3 class="fw-bold text-warning mb-0">@Model.PendingCount</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-warning text-dark">
+
+        <div class="col-12 col-md-4">
+            <div class="card border-1 shadow-sm rounded-4 h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Pending</h5>
-                    <h2 class="mb-0">@Model.PendingCount</h2>
+                    <p class="text-muted mb-1">Completed</p>
+                    <h3 class="fw-bold text-success mb-0">@Model.CompletedCount</h3>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Search and Filter Section -->
-    <div class="card mb-4">
-        <div class="card-body">
+    <div class="card border-1 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3 p-md-4">
             <form asp-action="Index" method="get" id="filterForm">
-                <div class="row g-3">
-                    <div class="col-md-5">
-                        <input type="text" name="search" id="searchInput" class="form-control"
-                               placeholder="Search by title..." value="@Model.SearchTerm" />
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-lg-5">
+                        <label class="form-label fw-semibold">Search</label>
+                        <input type="text"
+                               name="search"
+                               id="searchInput"
+                               class="form-control rounded-3"
+                               placeholder="Search by title..."
+                               value="@Model.SearchTerm" />
                     </div>
-                    <div class="col-md-3">
-                        <select name="status" id="statusFilter" class="form-select">
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select name="status" id="statusFilter" class="form-select rounded-3">
                             <option value="">All Tasks</option>
                             <option value="pending" selected="@(Model.FilterStatus == "pending")">Pending</option>
                             <option value="completed" selected="@(Model.FilterStatus == "completed")">Completed</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <select name="sort" id="sortOrder" class="form-select">
-                            <option value="">Sort by Date (Newest)</option>
-                            <option value="duedate" selected="@(Model.SortOrder == "duedate")">Sort by Due Date</option>
-                            <option value="priority" selected="@(Model.SortOrder == "priority")">Sort by Priority</option>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label fw-semibold">Sort By</label>
+                        <select name="sort" id="sortOrder" class="form-select rounded-3">
+                            <option value="">Newest</option>
+                            <option value="duedate" selected="@(Model.SortOrder == "duedate")">Due Date</option>
+                            <option value="priority" selected="@(Model.SortOrder == "priority")">Priority</option>
                         </select>
                     </div>
-                    <div class="col-md-1">
-                        <button type="submit" class="btn btn-primary w-100">Search</button>
+
+                    <div class="col-12 col-lg-1 d-grid">
+                        <button type="submit" class="btn btn-sm btn-primary rounded-3">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i>Search
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
+
     <form id="antiForgeryForm" style="display:none;">
         @Html.AntiForgeryToken()
     </form>
+
     <div id="taskTableContainer">
         @await Html.PartialAsync("_TaskTablePartial", Model)
     </div>
+
     @if (Model.TotalPages > 1)
     {
-        <nav class="mt-3">
-            <ul class="pagination justify-content-center">
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center flex-wrap">
                 <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                    <a class="page-link"
+                    <a class="page-link rounded-start"
                            asp-action="Index"
                            asp-route-search="@Model.SearchTerm"
                            asp-route-status="@Model.FilterStatus"
@@ -118,7 +135,7 @@
                 }
 
                 <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                    <a class="page-link"
+                    <a class="page-link rounded-end"
                            asp-action="Index"
                            asp-route-search="@Model.SearchTerm"
                            asp-route-status="@Model.FilterStatus"
@@ -130,26 +147,6 @@
             </ul>
         </nav>
     }
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the task: <strong id="deleteTaskTitle"></strong>?</p>
-                <p class="text-danger mb-0">This action cannot be undone!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 @section Scripts {

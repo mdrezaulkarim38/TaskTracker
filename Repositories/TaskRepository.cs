@@ -204,20 +204,6 @@ public class TaskRepository : ITaskRepository
         }
     }
 
-    public async Task<bool> ExistsAsync(int id)
-    {
-        try
-        {
-            var userId = GetCurrentUserId();
-            return await _context.Tasks.AnyAsync(t => t.Id == id && t.UserId == userId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking existence of task with ID {TaskId}", id);
-            throw;
-        }
-    }
-
     public async Task<IEnumerable<TaskItem>> SearchAsync(string term)
     {
         try

@@ -1,63 +1,105 @@
 ﻿@model TaskTracker.Models.ViewModels.TaskListViewModel
-<!-- Tasks Table -->
-<div class="table-responsive">
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th style="width: 5%">ID</th>
-                <th style="width: 30%">Title</th>
-                <th style="width: 15%">Due Date</th>
-                <th style="width: 10%">Priority</th>
-                <th style="width: 15%">Status</th>
-                <th style="width: 25%">Actions</th>
-            </tr>
-        </thead>
-        <tbody id="tasksTableBody">
-            @if (Model.Tasks != null && Model.Tasks.Any())
-            {
-                @foreach (var task in Model.Tasks)
-                {
-                    <tr id="task-row-@task.Id">
-                        <td>@task.Id</td>
-                        <td>@task.Title</td>
-                        <td>@(task.DueDate?.ToString("yyyy-MM-dd") ?? "Not set")</td>
-                        <td>
-                            @{
-                                var priorityClass = task.Priority.ToString() switch
-                                {
-                                    "High" => "bg-danger",
-                                    "Medium" => "bg-warning",
-                                    "Low" => "bg-info",
-                                    _ => "bg-secondary"
-                                };
-                            }
-                            <span class="badge @priorityClass">@task.Priority</span>
-                        </td>
-                        <td>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input toggle-status" type="checkbox"
-                                       data-id="@task.Id"
-                                @(task.IsCompleted ? "checked" : "") />
-                                <label class="form-check-label" id="status-label-@task.Id">
-                                    @(task.IsCompleted ? "Completed" : "Pending")
-                                </label>
-                            </div>
-                        </td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-sm btn-warning">Edit</a>
-                            <button class="btn btn-sm btn-danger delete-btn" data-id="@task.Id" data-title="@task.Title">Delete</button>
-                        </td>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Task</th>
+                        <th>Due Date</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
                     </tr>
-                }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        No tasks found. Click "Add New Task" to create one.
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                </thead>
+                <tbody id="tasksTableBody">
+                    @if (Model.Tasks != null && Model.Tasks.Any())
+                    {
+                        @foreach (var task in Model.Tasks)
+                        {
+                            var priorityClass = task.Priority.ToString() switch
+                            {
+                                "High" => "bg-danger-subtle text-danger border border-danger-subtle",
+                                "Medium" => "bg-warning-subtle text-warning border border-warning-subtle",
+                                "Low" => "bg-info-subtle text-info border border-info-subtle",
+                                _ => "bg-secondary-subtle text-secondary border border-secondary-subtle"
+                            };
+
+                            var statusBadgeClass = task.IsCompleted
+                                ? "bg-success-subtle text-success border border-success-subtle"
+                                : "bg-secondary-subtle text-secondary border border-secondary-subtle";
+
+                            <tr id="task-row-@task.Id">
+                                <td class="ps-4 fw-semibold text-muted">#@task.Id</td>
+
+                                <td>
+                                    <div class="fw-semibold text-dark">@task.Title</div>
+                                    @if (!string.IsNullOrWhiteSpace(task.Description))
+                                    {
+                                        <div class="small text-muted text-truncate" style="max-width: 260px;">
+                                            @task.Description
+                                        </div>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (task.DueDate.HasValue)
+                                    {
+                                        <span class="text-dark">@task.DueDate.Value.ToString("dd MMM yyyy")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Not set</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <span class="badge rounded-pill px-3 py-2 @priorityClass">
+                                        @task.Priority
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="badge rounded-pill px-3 py-2 @statusBadgeClass toggle-status"
+                                          data-id="@task.Id"
+                                          style="cursor:pointer;"
+                                          id="status-label-@task.Id">
+                                        @(task.IsCompleted ? "Completed" : "Pending")
+                                    </span>
+                                </td>
+
+                                <td class="text-end pe-4">
+                                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                                        <a asp-action="Edit" asp-route-id="@task.Id" class="btn btn-warning btn-sm px-3">
+                                            <i class="fa-solid fa-pen-to-square me-1"></i>Edit
+                                        </a>
+
+                                        <button type="button"
+                                                class="btn btn-danger btn-sm px-3 delete-btn"
+                                                data-id="@task.Id"
+                                                data-title="@task.Title">
+                                            <i class="fa-solid fa-trash me-1"></i>Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <div class="mb-2 fs-5 fw-semibold">No tasks found</div>
+                                    <div class="small">Try changing your search or create a new task.</div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>

@@ -26,12 +26,9 @@
         }, 300);
     });
 
-    $(document).on('change', '.toggle-status', function() {
-        const checkbox = $(this);
-        const taskId = checkbox.data('id');
-        const originalState = !checkbox.is(':checked');
-
-        checkbox.prop('disabled', true);
+    $(document).on('click', '.toggle-status', function() {
+        const badge = $(this);
+        const taskId = badge.data('id');
 
         $.ajax({
             url: '/Task/ToggleStatus',
@@ -42,25 +39,25 @@
             },
             success: function(response) {
                 if (response.success) {
-                    const label = $(`#status-label-${taskId}`);
-                    label.text(response.isCompleted ? 'Completed' : 'Pending');
+                    // Update text
+                    badge.text(response.isCompleted ? 'Completed' : 'Pending');
 
-                    const row = checkbox.closest('tr');
-                    row.css('backgroundColor', '#d4edda');
-                    setTimeout(() => row.css('backgroundColor', ''), 1000);
+                    // Update color
+                    if (response.isCompleted) {
+                        badge.removeClass('bg-secondary-subtle text-secondary')
+                            .addClass('bg-success-subtle text-success');
+                    } else {
+                        badge.removeClass('bg-success-subtle text-success')
+                            .addClass('bg-secondary-subtle text-secondary');
+                    }
 
-                    showAlert('toast', 'Task updated successfully.', 'success');
+                    showAlert('toast', 'Task status updated.', 'success');
                 } else {
-                    checkbox.prop('checked', originalState);
-                    showAlert('modal', response.message || 'Error updating task status.', 'error');
+                    showAlert('modal', response.message || 'Error updating status.', 'error');
                 }
             },
             error: function() {
-                checkbox.prop('checked', originalState);
                 showAlert('modal', 'Error updating task status.', 'error');
-            },
-            complete: function() {
-                checkbox.prop('disabled', false);
             }
         });
     });

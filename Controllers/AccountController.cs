@@ -44,6 +44,7 @@ public class AccountController : Controller
             if (result.Succeeded)
             {
                 _logger.LogInformation("User created a new account with password.");
+                TempData["Success"] = "Registration successful. Please login.";
                 return RedirectToAction("Login", "Account");
             }
 
@@ -80,6 +81,7 @@ public class AccountController : Controller
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
+                TempData["Success"] = "Login successful.";
                 return RedirectToLocal(returnUrl);
             }
 
