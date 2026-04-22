@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 using TaskTracker.Models.ViewModels;
 using TaskTracker.Services;
 
@@ -138,5 +139,20 @@ public class TaskController : Controller
     {
         var model = await _taskService.GetTaskListAsync(term, null, null);
         return PartialView("_TaskTablePartial", model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportCsv(string? search, string? status, string? sort)
+    {
+        var model = await _taskService.GetTaskListAsync(search, status, sort);
+        var tasks = model.Tasks;
+        var csv = new StringBuilder();
+        csv.AppendLine("Id,Title,Description,DueDate,Priority,IsCompleted,CreatedAt");
+        foreach (var task in tasks)
+        {
+            csv.AppendLine($"{task.Id},\"{task.Title}\",\"{task.Description}\",{task.DueDate},{task.Priority},{task.IsCompleted},{task.CreatedAt}");
+        }
+        var bytes = Encoding.UTF8.GetBytes(csv.ToString());
+        return File(bytes, "text/csv", "tasks.csv");
     }
 }
