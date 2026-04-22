@@ -155,19 +155,6 @@ https://localhost:5001
 
 ---
 
-## Future Improvements
-
-* SignalR real-time updates
-* Dashboard & analytics
-* Calendar view
-* Email reminders
-* Tags & subtasks
-* Drag-and-drop tasks
-* Dark mode
-* Mobile PWA
-
----
-
 ## License
 
 MIT License
