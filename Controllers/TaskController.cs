@@ -138,13 +138,7 @@ public class TaskController : Controller
     [HttpGet]
     public async Task<IActionResult> Search(string term)
     {
-        if (string.IsNullOrWhiteSpace(term))
-        {
-            var all = await _taskService.GetTaskListAsync(null, "all", "desc");
-            return PartialView("_TaskTablePartial", all.Tasks);
-        }
-
-        var tasks = await _taskService.SearchTasksAsync(term);
-        return PartialView("_TaskTablePartial", tasks);
+        var model = await _taskService.GetTaskListAsync(term, null, null);
+        return PartialView("_TaskTablePartial", model);
     }
 }
