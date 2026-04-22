@@ -98,23 +98,21 @@ public class TaskController : Controller
             var exists = await _taskService.GetTaskByIdAsync(id);
             if (exists == null)
             {
-                TempData["Error"] = "Task not found.";
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, message = "Task not found." });
             }
 
             await _taskService.DeleteTaskAsync(id);
-            TempData["Success"] = "Task deleted successfully.";
+            return Json(new { success = true });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting task ID: {Id}", id);
-            TempData["Error"] = "Something went wrong. Please try again.";
+            return Json(new { success = false, message = "Something went wrong. Please try again." });
         }
-
-        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleStatus(int id)
     {
         try
