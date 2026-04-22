@@ -14,6 +14,13 @@
             <a asp-action="Create" class="btn btn-primary">
                 + Add New Task
             </a>
+            <a asp-action="ExportCsv"
+                   asp-route-search="@Model.SearchTerm"
+                   asp-route-status="@Model.FilterStatus"
+                   asp-route-sort="@Model.SortOrder"
+                   class="btn btn-success">
+                ⬇ Export CSV
+            </a>
         </div>
     </div>
 

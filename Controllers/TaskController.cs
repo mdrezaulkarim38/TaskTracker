@@ -150,7 +150,9 @@ public class TaskController : Controller
         csv.AppendLine("Id,Title,Description,DueDate,Priority,IsCompleted,CreatedAt");
         foreach (var task in tasks)
         {
-            csv.AppendLine($"{task.Id},\"{task.Title}\",\"{task.Description}\",{task.DueDate},{task.Priority},{task.IsCompleted},{task.CreatedAt}");
+            string Escape(string value) => "\"" + value?.Replace("\"", "\"\"") + "\"";
+
+            csv.AppendLine($"{task.Id},{Escape(task.Title)},{Escape(task.Description ?? "")},{task.DueDate},{task.Priority},{task.IsCompleted},{task.CreatedAt}");
         }
         var bytes = Encoding.UTF8.GetBytes(csv.ToString());
         return File(bytes, "text/csv", "tasks.csv");
