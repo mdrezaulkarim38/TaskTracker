@@ -11,7 +11,10 @@ public class TaskRepository : ITaskRepository
     private readonly ILogger<TaskRepository> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public TaskRepository(ApplicationDbContext context, ILogger<TaskRepository> logger, IHttpContextAccessor httpContextAccessor)
+    public TaskRepository(
+        ApplicationDbContext context,
+        ILogger<TaskRepository> logger,
+        IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
         _logger = logger;
@@ -23,7 +26,47 @@ public class TaskRepository : ITaskRepository
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
             throw new UnauthorizedAccessException("User not logged in");
+
         return userId;
+    }
+
+    private IQueryable<TaskItem> BuildFilteredQuery(string? search, string? status)
+    {
+        var userId = GetCurrentUserId();
+        var query = _context.Tasks.Where(t => t.UserId == userId);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(t =>
+                t.Title.Contains(search) ||
+                (t.Description != null && t.Description.Contains(search)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (status.ToLower() == "completed")
+                query = query.Where(t => t.IsCompleted);
+            else if (status.ToLower() == "pending")
+                query = query.Where(t => !t.IsCompleted);
+        }
+
+        return query;
+    }
+
+    private IQueryable<TaskItem> ApplySorting(IQueryable<TaskItem> query, string? sortOrder)
+    {
+        if (sortOrder?.ToLower() == "duedate")
+        {
+            return query.OrderBy(t => t.DueDate ?? DateTime.MaxValue);
+        }
+        else if (sortOrder?.ToLower() == "priority")
+        {
+            return query.OrderByDescending(t => t.Priority);
+        }
+        else
+        {
+            return query.OrderByDescending(t => t.CreatedAt);
+        }
     }
 
     public async Task<IEnumerable<TaskItem>> GetAllAsync()
@@ -62,7 +105,6 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
-            // Set the UserId before adding
             task.UserId = GetCurrentUserId();
             task.CreatedAt = DateTime.UtcNow;
 
@@ -91,7 +133,6 @@ public class TaskRepository : ITaskRepository
                 throw new UnauthorizedAccessException("Task not found or access denied");
             }
 
-            // Update only the fields that should be changed
             existingTask.Title = task.Title;
             existingTask.Description = task.Description;
             existingTask.DueDate = task.DueDate;
@@ -147,7 +188,8 @@ public class TaskRepository : ITaskRepository
             {
                 task.IsCompleted = !task.IsCompleted;
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Task status toggled successfully: {TaskTitle} (ID: {TaskId}) - Completed: {IsCompleted}",
+                _logger.LogInformation(
+                    "Task status toggled successfully: {TaskTitle} (ID: {TaskId}) - Completed: {IsCompleted}",
                     task.Title, id, task.IsCompleted);
             }
             else
@@ -203,29 +245,8 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
-            var userId = GetCurrentUserId();
-            var query = _context.Tasks.Where(t => t.UserId == userId);
-
-            if (!string.IsNullOrEmpty(status))
-            {
-                if (status.ToLower() == "completed")
-                    query = query.Where(t => t.IsCompleted);
-                else if (status.ToLower() == "pending")
-                    query = query.Where(t => !t.IsCompleted);
-            }
-
-            if (sortOrder?.ToLower() == "duedate")
-            {
-                query = query.OrderBy(t => t.DueDate);
-            }
-            else if (sortOrder?.ToLower() == "priority")
-            {
-                query = query.OrderBy(t => t.Priority);
-            }
-            else
-            {
-                query = query.OrderByDescending(t => t.CreatedAt);
-            }
+            var query = BuildFilteredQuery(null, status);
+            query = ApplySorting(query, sortOrder);
 
             return await query.ToListAsync();
         }
@@ -240,36 +261,8 @@ public class TaskRepository : ITaskRepository
     {
         try
         {
-            var userId = GetCurrentUserId();
-            var query = _context.Tasks.Where(t => t.UserId == userId);
-
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                query = query.Where(t =>
-                    t.Title.Contains(search) ||
-                    (t.Description != null && t.Description.Contains(search)));
-            }
-
-            if (!string.IsNullOrWhiteSpace(status))
-            {
-                if (status.ToLower() == "completed")
-                    query = query.Where(t => t.IsCompleted);
-                else if (status.ToLower() == "pending")
-                    query = query.Where(t => !t.IsCompleted);
-            }
-
-            if (sortOrder?.ToLower() == "duedate")
-            {
-                query = query.OrderBy(t => t.DueDate ?? DateTime.MaxValue);
-            }
-            else if (sortOrder?.ToLower() == "priority")
-            {
-                query = query.OrderByDescending(t => t.Priority);
-            }
-            else
-            {
-                query = query.OrderByDescending(t => t.CreatedAt);
-            }
+            var query = BuildFilteredQuery(search, status);
+            query = ApplySorting(query, sortOrder);
 
             return await query.ToListAsync();
         }
@@ -277,6 +270,41 @@ public class TaskRepository : ITaskRepository
         {
             _logger.LogError(ex, "Error filtering tasks with search: {Search}, status: {Status}, sortOrder: {SortOrder}",
                 search, status, sortOrder);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<TaskItem>> GetFilteredTasksPagedAsync(string? search, string? status, string? sortOrder, int page, int pageSize)
+    {
+        try
+        {
+            var query = BuildFilteredQuery(search, status);
+            query = ApplySorting(query, sortOrder);
+
+            return await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting paged tasks with search: {Search}, status: {Status}, sortOrder: {SortOrder}",
+                search, status, sortOrder);
+            throw;
+        }
+    }
+
+    public async Task<int> GetFilteredTasksCountAsync(string? search, string? status)
+    {
+        try
+        {
+            var query = BuildFilteredQuery(search, status);
+            return await query.CountAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error counting filtered tasks with search: {Search}, status: {Status}",
+                search, status);
             throw;
         }
     }

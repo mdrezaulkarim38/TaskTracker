@@ -5,7 +5,7 @@ namespace TaskTracker.Services;
 
 public interface ITaskService
 {
-    Task<TaskListViewModel> GetTaskListAsync(string? search, string? status, string? sort);
+    Task<TaskListViewModel> GetTaskListAsync(string? search, string? status, string? sort, int page = 1, int pageSize = 5);
     Task<TaskItem?> GetTaskByIdAsync(int id);
     Task<TaskFormViewModel?> GetTaskForEditAsync(int id);
     Task CreateTaskAsync(TaskFormViewModel model);

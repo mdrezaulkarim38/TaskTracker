@@ -18,9 +18,9 @@ public class TaskController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index(string? search, string? status, string? sort)
+    public async Task<IActionResult> Index(string? search, string? status, string? sort, int page = 1)
     {
-        var model = await _taskService.GetTaskListAsync(search, status, sort);
+        var model = await _taskService.GetTaskListAsync(search, status, sort, page, 5);
         return View(model);
     }
 
@@ -137,7 +137,7 @@ public class TaskController : Controller
     [HttpGet]
     public async Task<IActionResult> Search(string? term)
     {
-        var model = await _taskService.GetTaskListAsync(term, null, null);
+        var model = await _taskService.GetTaskListAsync(term, null, null, 1, 5);
         return PartialView("_TaskTablePartial", model);
     }
 

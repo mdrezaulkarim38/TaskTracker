@@ -15,9 +15,10 @@ public class TaskService : ITaskService
         _logger = logger;
     }
 
-    public async Task<TaskListViewModel> GetTaskListAsync(string? search, string? status, string? sort)
+    public async Task<TaskListViewModel> GetTaskListAsync(string? search, string? status, string? sort, int page = 1, int pageSize = 5)
     {
-        var tasks = await _taskRepository.GetFilteredTasksAsync(search, status, sort);
+        var tasks = await _taskRepository.GetFilteredTasksPagedAsync(search, status, sort, page, pageSize);
+        var totalItems = await _taskRepository.GetFilteredTasksCountAsync(search, status);
         var allTasks = await _taskRepository.GetAllAsync();
 
         return new TaskListViewModel
@@ -28,7 +29,11 @@ public class TaskService : ITaskService
             SortOrder = sort ?? "",
             TotalCount = allTasks.Count(),
             CompletedCount = allTasks.Count(t => t.IsCompleted),
-            PendingCount = allTasks.Count(t => !t.IsCompleted)
+            PendingCount = allTasks.Count(t => !t.IsCompleted),
+
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalItems = totalItems
         };
     }
 
