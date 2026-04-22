@@ -102,7 +102,7 @@ public class TaskController : Controller
             }
 
             await _taskService.DeleteTaskAsync(id);
-            return Json(new { success = true });
+            return Json(new { success = true, message = "Task deleted successfully." });
         }
         catch (Exception ex)
         {
@@ -122,8 +122,8 @@ public class TaskController : Controller
                 return Json(new { success = false, message = "Task not found." });
 
             await _taskService.ToggleStatusAsync(id);
-
             var updated = await _taskService.GetTaskByIdAsync(id);
+
             return Json(new { success = true, isCompleted = updated!.IsCompleted });
         }
         catch (Exception ex)
@@ -134,7 +134,7 @@ public class TaskController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Search(string term)
+    public async Task<IActionResult> Search(string? term)
     {
         var model = await _taskService.GetTaskListAsync(term, null, null);
         return PartialView("_TaskTablePartial", model);

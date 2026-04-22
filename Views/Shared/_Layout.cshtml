@@ -70,6 +70,21 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/sweetalert2.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var successMessage = '@Html.Raw(TempData["Success"]?.ToString()?.Replace("'", "\\'"))';
+            var errorMessage = '@Html.Raw(TempData["Error"]?.ToString()?.Replace("'", "\\'"))';
+
+            if (successMessage) {
+                showAlert('toast', successMessage, 'success');
+            }
+
+            if (errorMessage) {
+                showAlert('modal', errorMessage, 'error');
+            }
+        });
+    </script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
