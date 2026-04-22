@@ -1,116 +1,180 @@
 # TaskTracker
 
-TaskTracker is a simple task management web application built with ASP.NET Core MVC. It allows users to create, manage, and track their tasks efficiently.
+TaskTracker is a robust task management web application built with ASP.NET Core MVC. It provides a secure, feature-rich platform for users to create, manage, and track their daily tasks efficiently with real-time updates and comprehensive filtering capabilities. 
+
+---
 
 ## Features
 
-- User authentication (Register / Login)
-- Create, edit, and delete tasks
-- Search tasks using AJAX
-- Filter tasks by status (Pending / Completed)
-- Sort tasks by due date or priority
-- Toggle task completion status
-- Server-side pagination
-- Export tasks to CSV
-- SweetAlert notifications for better user experience
-- Responsive UI using Bootstrap
+### Authentication & Security
+
+* User registration and login with ASP.NET Core Identity
+* Password validation (minimum 6 characters, requires uppercase, lowercase, and digit)
+* Account lockout after 5 failed attempts (5-minute duration)
+* Email confirmation support
+* Secure cookie authentication with sliding expiration (60 minutes)
+* Role-based authorization ready
+
+### Task Management
+
+* Create, edit, and delete tasks
+* Toggle task completion status with instant AJAX updates
+* Mark tasks as complete/pending with real-time UI feedback
+* Server-side pagination (5 tasks per page)
+* Task details:
+
+  * Title and description
+  * Due date
+  * Priority levels
+  * Creation timestamp
+  * Completion status
+
+### Advanced Features
+
+* **Search**: Real-time AJAX search
+* **Filter**: Pending/Completed
+* **Sort**: Due date or priority
+* **Export**: CSV (UTF-8 BOM)
+* Responsive table with partial updates
+* Toast notifications for CRUD actions
+
+### User Experience
+
+* SweetAlert2 confirmations
+* Bootstrap 5 UI
+* Loading states for AJAX
+* Form validation (client & server)
+* Clean navigation
+
+---
 
 ## Tech Stack
 
-- ASP.NET Core MVC (.NET 10)
-- Entity Framework Core
-- SQL Server
-- Bootstrap 5
-- jQuery (AJAX)
-- SweetAlert2
+| Technology                 | Purpose       |
+| -------------------------- | ------------- |
+| ASP.NET Core MVC (.NET 10) | Web framework |
+| Entity Framework Core      | ORM           |
+| SQL Server                 | Database      |
+| ASP.NET Core Identity      | Auth          |
+| Bootstrap 5                | UI            |
+| jQuery                     | AJAX          |
+| SweetAlert2                | Alerts        |
+| Font Awesome               | Icons         |
+
+---
+
+## Project Structure
+
+```
+TaskTracker/
+├── Controllers/
+│   ├── AccountController.cs
+│   ├── TaskController.cs
+│   └── HomeController.cs
+├── Services/
+├── Repositories/
+├── Models/
+├── Data/
+├── Views/
+├── wwwroot/
+└── Migrations/
+```
+
+---
 
 ## Setup Instructions
 
-### 1. Clone the repository
+### Prerequisites
+
+* .NET 10 SDK
+* SQL Server
+* Git
+
+### Clone
 
 ```bash
 git clone https://github.com/mdrezaulkarim38/TaskTracker.git
 cd TaskTracker
 ```
 
-### 2. Configure the database
-
-Update the connection string in `appsettings.json`:
+### Configure Database
 
 ```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=YOUR_SERVER;Database=TaskTrackerDb;Trusted_Connection=True;"
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=TaskTrackerDb;Trusted_Connection=True;"
+  }
 }
 ```
 
-### 3. Apply migrations
+### Run Migrations
 
 ```bash
 dotnet ef database update
 ```
 
-### 4. Run the application
+### Run App
 
 ```bash
 dotnet run
 ```
 
-Then open:
+Visit:
 
 ```
-https://localhost:xxxx
+https://localhost:5001
 ```
 
-## Database
+---
 
-- Uses Entity Framework Core (Code First approach)
-- Includes migrations in the project
-- Main tables:
-  - Users (ASP.NET Identity)
-  - Tasks
+## API Endpoints
 
-## Project Structure
+| Endpoint                | Method   | Description |
+| ----------------------- | -------- | ----------- |
+| /Account/Register       | GET/POST | Register    |
+| /Account/Login          | GET/POST | Login       |
+| /Account/Logout         | POST     | Logout      |
+| /Task                   | GET      | Task list   |
+| /Task/Create            | GET/POST | Create      |
+| /Task/Edit/{id}         | GET/POST | Edit        |
+| /Task/Delete/{id}       | POST     | Delete      |
+| /Task/ToggleStatus/{id} | POST     | Toggle      |
+| /Task/Search            | GET      | Search      |
+| /Task/ExportCsv         | GET      | Export      |
 
-```
-Controllers/
-Services/
-Repositories/
-Models/
-Views/
-wwwroot/
-```
+---
 
-- Controllers: Handle HTTP requests  
-- Services: Contain business logic  
-- Repositories: Handle data access  
-- ViewModels: Shape data for the UI  
+## Security Features
 
-## Design Decisions
+* CSRF protection
+* Password complexity rules
+* Account lockout
+* Cookie authentication
+* HTTPS enforcement
+* Secure hashing
 
-- Repository pattern for clean data access  
-- Service layer for separation of concerns  
-- AJAX used for search, delete, and status toggle  
-- SweetAlert used for notifications  
-- Server-side pagination for performance  
-
-## Time Spent
-
-- Backend (CRUD, authentication, service/repository): 6–7 hours  
-- Frontend (UI, AJAX, alerts): 4–5 hours  
-- Pagination and CSV export: 2–3 hours  
-- Debugging and refinement: 2 hours  
-
-**Total time: approximately 14–17 hours**
+---
 
 ## Future Improvements
 
-- Real-time updates (SignalR)  
-- Dashboard and analytics  
-- Calendar view  
-- Enhanced mobile experience  
-- Export to Excel (XLSX)  
+* SignalR real-time updates
+* Dashboard & analytics
+* Calendar view
+* Email reminders
+* Tags & subtasks
+* Drag-and-drop tasks
+* Dark mode
+* Mobile PWA
+
+---
+
+## License
+
+MIT License
+
+---
 
 ## Author
 
-Md Rezaul Karim  
-https://github.com/mdrezaulkarim38
+**Md Rezaul Karim**
+GitHub: @mdrezaulkarim38
