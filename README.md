@@ -170,7 +170,7 @@ This project was completed within a focused one-day development cycle, following
 
 ### Total Effort
 
-Approximately **~11-12 hours** of focused development time across two productive sessions.
+Approximately **~ 9 - 10 hours** of focused development time across two productive sessions.
 
 ---
 
