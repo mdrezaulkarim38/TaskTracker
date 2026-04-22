@@ -10,10 +10,7 @@ TaskTracker is a robust task management web application built with ASP.NET Core 
 
 * User registration and login with ASP.NET Core Identity
 * Password validation (minimum 6 characters, requires uppercase, lowercase, and digit)
-* Account lockout after 5 failed attempts (5-minute duration)
-* Email confirmation support
 * Secure cookie authentication with sliding expiration (60 minutes)
-* Role-based authorization ready
 
 ### Task Management
 
