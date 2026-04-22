@@ -144,17 +144,44 @@ public class TaskController : Controller
     [HttpGet]
     public async Task<IActionResult> ExportCsv(string? search, string? status, string? sort)
     {
-        var model = await _taskService.GetTaskListAsync(search, status, sort);
-        var tasks = model.Tasks;
-        var csv = new StringBuilder();
-        csv.AppendLine("Id,Title,Description,DueDate,Priority,IsCompleted,CreatedAt");
-        foreach (var task in tasks)
+        try
         {
-            string Escape(string value) => "\"" + value?.Replace("\"", "\"\"") + "\"";
+            var tasks = await _taskService.GetAllTasksForExportAsync(search, status, sort);
+            if (!tasks.Any())
+            {
+                TempData["Warning"] = "No tasks found to export.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            csv.AppendLine($"{task.Id},{Escape(task.Title)},{Escape(task.Description ?? "")},{task.DueDate},{task.Priority},{task.IsCompleted},{task.CreatedAt}");
+            var csv = new StringBuilder();
+            var utf8WithBom = new UTF8Encoding(true);
+            csv.AppendLine("\"ID\",\"Title\",\"Description\",\"Due Date\",\"Priority\",\"Status\",\"Created At\"");
+            foreach (var task in tasks)
+            {
+                static string Escape(string? value) =>
+                    string.IsNullOrEmpty(value) ? "\"\"" : "\"" + value.Replace("\"", "\"\"") + "\"";
+
+                csv.AppendLine(string.Join(",",
+                    task.Id.ToString(),
+                    Escape(task.Title),
+                    Escape(task.Description),
+                    $"\"{task.DueDate:yyyy-MM-dd}\"",
+                    Escape(task.Priority.ToString()),
+                    $"\"{(task.IsCompleted ? "Completed" : "Pending")}\"",
+                    $"\"{task.CreatedAt:yyyy-MM-dd HH:mm:ss}\""
+                ));
+            }
+
+            var bytes = utf8WithBom.GetBytes(csv.ToString());
+            var fileName = $"tasks_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            return File(bytes, "text/csv; charset=utf-8", fileName);
         }
-        var bytes = Encoding.UTF8.GetBytes(csv.ToString());
-        return File(bytes, "text/csv", "tasks.csv");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting tasks to CSV");
+            TempData["Error"] = "Failed to export tasks. Please try again.";
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

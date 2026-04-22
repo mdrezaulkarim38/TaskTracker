@@ -105,4 +105,10 @@ public class TaskService : ITaskService
     {
         return await _taskRepository.SearchAsync(term);
     }
+
+    public async Task<List<TaskItem>> GetAllTasksForExportAsync(string? search, string? status, string? sort)
+    {
+        var tasks = await _taskRepository.GetFilteredTasksAsync(search, status, sort);
+        return tasks.ToList();
+    }
 }

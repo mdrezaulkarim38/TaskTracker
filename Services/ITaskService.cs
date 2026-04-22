@@ -13,4 +13,5 @@ public interface ITaskService
     Task DeleteTaskAsync(int id);
     Task ToggleStatusAsync(int id);
     Task<IEnumerable<TaskItem>> SearchTasksAsync(string term);
+    Task<List<TaskItem>> GetAllTasksForExportAsync(string? search, string? status, string? sort);
 }
