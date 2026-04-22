@@ -152,9 +152,25 @@ https://localhost:5001
 
 ---
 
-## License
+## ⏱️ Time Spent
 
-MIT License
+This project was completed within a focused one-day development cycle, following the test requirement.
+
+### Work Breakdown
+
+* **Day 1 (Evening Session):**
+  * Started around 8:00 PM
+  * Completed project setup, database configuration, and initial structure
+  * Implemented authentication and core task model
+
+* **Day 2 (Morning Session):**
+  * Continued development and completed all required features
+  * Added advanced functionality (search, filtering, pagination, CSV export)
+  * Final refinements, bug fixes, and UI improvements
+
+### Total Effort
+
+Approximately **~11-12 hours** of focused development time across two productive sessions.
 
 ---
 
